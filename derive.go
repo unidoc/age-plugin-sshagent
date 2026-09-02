@@ -16,7 +16,7 @@ import (
 	"golang.org/x/crypto/ssh"
 	"golang.org/x/crypto/ssh/agent"
 
-	"github.com/eszio/age-plugin-sshagent/internal/bech32"
+	"github.com/unidoc/age-plugin-sshagent/internal/bech32"
 )
 
 const (

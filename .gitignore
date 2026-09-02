@@ -1,5 +1,7 @@
 /age-plugin-sshagent
+bin/
 dist/
+temp/
 *.age
 .idea/
 .vscode/
