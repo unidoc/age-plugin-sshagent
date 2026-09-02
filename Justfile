@@ -72,7 +72,10 @@ clean:
 #                                pushes — CI (goreleaser) publishes binaries,
 #                                checksums and changelog to a GitHub Release.
 
-# Step 1: open the version-bump PR.
+# Step 1: open the version-bump PR. Only for an actual bump — if
+# version.txt on main already carries VERSION (true for the very first
+# release, since it ships pre-set), there is nothing to PR; go straight
+# to `just release VERSION`.
 release-pr VERSION:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -80,6 +83,11 @@ release-pr VERSION:
     [[ "{{VERSION}}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "✗ version must be X.Y.Z (no leading v), got '{{VERSION}}'"; exit 1; }
     [ -z "$(git status --porcelain)" ] || { echo "✗ working tree not clean"; exit 1; }
     git fetch origin
+    if [ "$(git show origin/main:version.txt | tr -d '[:space:]')" = "{{VERSION}}" ]; then
+        echo "✗ version.txt on main is already {{VERSION}} — nothing to bump; run: just release {{VERSION}}"
+        exit 1
+    fi
+    trap 'git checkout main 2>/dev/null; git branch -D "release/v{{VERSION}}" 2>/dev/null || true' EXIT
     git checkout -b "release/v{{VERSION}}" origin/main
     echo "{{VERSION}}" > version.txt
     git add version.txt
@@ -87,6 +95,7 @@ release-pr VERSION:
     git push -u origin "release/v{{VERSION}}"
     gh pr create --title "Release v{{VERSION}}" \
         --body "Bumps version.txt to {{VERSION}}. After merge: \`just release {{VERSION}}\` tags main and CI publishes the release."
+    trap - EXIT
     echo "✓ release PR opened — merge it, then run: just release {{VERSION}}"
 
 # Local test-build of the release pipeline — same artifacts as a real

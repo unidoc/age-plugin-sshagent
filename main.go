@@ -87,18 +87,29 @@ The ssh-agent must be running and hold the key (SSH_AUTH_SOCK).
 }
 
 func cmdVersion() {
+	bi, ok := debug.ReadBuildInfo()
+	// A `go install ...@latest` build gets no -ldflags (version stays
+	// "dev") but does know its own module version via bi.Main.Version
+	// — fall back to that rather than print a bare "dev" with nothing
+	// else useful. "(devel)" is what a non-module-mode build (e.g.
+	// -buildvcs=false, or building from within the module itself)
+	// reports; that's not a real version, so it's excluded.
+	if version == "dev" && ok && bi.Main.Version != "" && bi.Main.Version != "(devel)" {
+		version = bi.Main.Version
+	}
 	fmt.Printf("age-plugin-sshagent %s\n", version)
-	if bi, ok := debug.ReadBuildInfo(); ok {
-		fmt.Printf("go:      %s\n", bi.GoVersion)
-		for _, s := range bi.Settings {
-			switch s.Key {
-			case "vcs.revision":
-				fmt.Printf("commit:  %s\n", s.Value)
-			case "vcs.time":
-				fmt.Printf("built:   %s\n", s.Value)
-			case "vcs.modified":
-				fmt.Printf("dirty:   %s\n", s.Value)
-			}
+	if !ok {
+		return
+	}
+	fmt.Printf("go:      %s\n", bi.GoVersion)
+	for _, s := range bi.Settings {
+		switch s.Key {
+		case "vcs.revision":
+			fmt.Printf("commit:  %s\n", s.Value)
+		case "vcs.time":
+			fmt.Printf("built:   %s\n", s.Value)
+		case "vcs.modified":
+			fmt.Printf("dirty:   %s\n", s.Value)
 		}
 	}
 }

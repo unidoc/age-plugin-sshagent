@@ -27,7 +27,7 @@ The signature is verified against the public key before use. During `keygen`, th
 
 ## Install
 
-Prebuilt binaries (linux/freebsd/openbsd/darwin, amd64+arm64) are on the
+Prebuilt binaries (linux/freebsd/darwin on amd64+arm64, openbsd on amd64) are on the
 [releases page](https://github.com/unidoc/age-plugin-sshagent/releases).
 Or build from source:
 
