@@ -14,10 +14,16 @@ package main
 import (
 	"fmt"
 	"os"
+	"runtime/debug"
 
 	"filippo.io/age"
 	"filippo.io/age/plugin"
 )
+
+// version is set at build time via -ldflags "-X main.version=...";
+// defaults to "dev" so a source build is distinguishable from a
+// tagged release.
+var version = "dev"
 
 func main() {
 	if len(os.Args) > 1 {
@@ -28,6 +34,9 @@ func main() {
 			os.Exit(cmdList(os.Args[2:]))
 		case "recipient":
 			os.Exit(cmdRecipient(os.Args[2:]))
+		case "version", "--version":
+			cmdVersion()
+			os.Exit(0)
 		case "help", "-h", "--help":
 			usage()
 			os.Exit(0)
@@ -67,9 +76,29 @@ func usage() {
   age-plugin-sshagent list
       List ssh-agent keys and their eligibility.
 
+  age-plugin-sshagent version
+      Print binary version and build info.
+
 Decryption happens through age itself:
   age -d -i identity.txt file.age
 
 The ssh-agent must be running and hold the key (SSH_AUTH_SOCK).
 `)
+}
+
+func cmdVersion() {
+	fmt.Printf("age-plugin-sshagent %s\n", version)
+	if bi, ok := debug.ReadBuildInfo(); ok {
+		fmt.Printf("go:      %s\n", bi.GoVersion)
+		for _, s := range bi.Settings {
+			switch s.Key {
+			case "vcs.revision":
+				fmt.Printf("commit:  %s\n", s.Value)
+			case "vcs.time":
+				fmt.Printf("built:   %s\n", s.Value)
+			case "vcs.modified":
+				fmt.Printf("dirty:   %s\n", s.Value)
+			}
+		}
+	}
 }

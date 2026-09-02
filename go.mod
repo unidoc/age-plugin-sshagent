@@ -1,4 +1,4 @@
-module github.com/eszio/age-plugin-sshagent
+module github.com/unidoc/age-plugin-sshagent
 
 go 1.25.0
 

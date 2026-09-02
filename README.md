@@ -1,6 +1,8 @@
 # age-plugin-sshagent
 
-[![CI](https://github.com/eszio/age-plugin-sshagent/actions/workflows/ci.yml/badge.svg)](https://github.com/eszio/age-plugin-sshagent/actions/workflows/ci.yml)
+[![test](https://github.com/unidoc/age-plugin-sshagent/actions/workflows/test.yml/badge.svg)](https://github.com/unidoc/age-plugin-sshagent/actions/workflows/test.yml)
+
+UniDoc's fork of [eszio/age-plugin-sshagent](https://github.com/eszio/age-plugin-sshagent) — full credit to the original author.
 
 An [age](https://age-encryption.org) plugin that derives X25519 identities from deterministic ssh-agent signatures. Decryption keys are re-derived on demand by asking the agent to sign a fixed challenge — the ssh private key never leaves the agent and no new secret is stored on disk.
 
@@ -25,8 +27,18 @@ The signature is verified against the public key before use. During `keygen`, th
 
 ## Install
 
+Prebuilt binaries (linux/freebsd/openbsd/darwin, amd64+arm64) are on the
+[releases page](https://github.com/unidoc/age-plugin-sshagent/releases).
+Or build from source:
+
 ```
-go install github.com/eszio/age-plugin-sshagent@latest
+just build            # produces bin/age-plugin-sshagent
+```
+
+Or via `go install`:
+
+```
+go install github.com/unidoc/age-plugin-sshagent@latest
 ```
 
 The binary must be on your `PATH` so that `age` can discover it as a plugin. Requires age v1.1.0 or later to decrypt.
@@ -81,6 +93,14 @@ age-plugin-sshagent list
 
 Shows all keys currently in the agent and whether each is eligible.
 
+### Version
+
+```
+age-plugin-sshagent version
+```
+
+Prints the binary version and build info (commit, build time, dirty flag).
+
 ## Security model
 
 ### Which key types are supported and why
@@ -95,6 +115,8 @@ Anyone who can talk to your ssh-agent can request the same signature and re-deri
 - **Remote hosts when SSH agent forwarding is enabled** — forwarding exposes the signing capability to the remote host.
 
 This exposure is broader than the risk in ordinary ssh authentication, where an attacker must be online at the exact moment of authentication. Here, one successful signature request yields the long-term decryption key permanently. **Do not enable ssh agent forwarding to untrusted hosts if you use this plugin.**
+
+**Recommended: an agent that prompts for explicit confirmation on every `Sign` request**, not just on load. We use and recommend the 1Password SSH agent — it asks for biometric/PIN confirmation on every single signature, so a process (local or, via forwarding, remote) that silently requests one gets a visible prompt instead of a silent signature. Any comparably confirming agent works the same way — `ssh-add -c` (per-op confirmation) or a hardware token with a touch policy (YubiKey via `piv-agent`/`gpg-agent`) give the same property. A plain `ssh-add`-loaded key with no per-op confirmation does not: anything that can reach `SSH_AUTH_SOCK` can sign silently, which is functionally equivalent to that thing holding the derived key outright.
 
 ### Honest framing
 
@@ -124,6 +146,6 @@ Yes — that is one of the main use cases. Load the key once via `ssh-add` (or y
 
 ## License
 
-BSD-3-Clause, the same license as age. See [LICENSE](LICENSE).
+BSD-3-Clause, the same license as age. See [LICENSE](LICENSE) — unchanged from upstream; all design and implementation credit is [eszio](https://github.com/eszio)'s.
 
 The `internal/bech32` package is vendored from [filippo.io/age](https://github.com/FiloSottile/age) and is MIT-licensed; its original license header is preserved in the source file.

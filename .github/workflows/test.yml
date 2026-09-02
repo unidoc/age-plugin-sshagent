@@ -1,4 +1,4 @@
-name: CI
+name: test
 
 on:
   push:
@@ -13,10 +13,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-go@v5
         with:
-          go-version: stable
+          go-version-file: go.mod
 
       - name: Install age (ubuntu)
         if: matrix.os == 'ubuntu-latest'
@@ -26,11 +25,7 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: brew install age
 
-      - name: Vet
-        run: go vet ./...
-
-      - name: Format check
-        run: test -z "$(gofmt -l .)"
-
-      - name: Test
-        run: go test ./...
+      - run: go build ./...
+      - run: go vet ./...
+      - run: go test ./...
+      - run: gofmt -l . | tee /tmp/fmt.out && test ! -s /tmp/fmt.out
